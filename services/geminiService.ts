@@ -2,26 +2,13 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { SchemaAnalysisResult } from "../types";
 
 const getSchemaAnalysis = async (input: string): Promise<SchemaAnalysisResult> => {
-  // Try to retrieve the API Key from various sources depending on the build environment
-  // 1. Vite (import.meta.env.VITE_API_KEY)
-  // 2. Standard Node/Webpack (process.env.API_KEY)
-  // 3. Fallback for manual window injection
-  
-  let apiKey = '';
-  
+  // Vite replaces this with the actual string during build
   // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
-    // @ts-ignore
-    apiKey = import.meta.env.VITE_API_KEY;
-  } else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    apiKey = process.env.API_KEY;
-  } else if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
-    apiKey = (window as any).process.env.API_KEY;
-  }
+  const apiKey = import.meta.env.VITE_API_KEY;
 
   if (!apiKey) {
-    console.error("API Key missing. Please set VITE_API_KEY in your environment variables.");
-    throw new Error("API Configuratie ontbreekt. Neem contact op met de beheerder.");
+    console.error("API Key missing. VITE_API_KEY not found.");
+    throw new Error("API Configuratiefout: Sleutel ontbreekt. Controleer je Vercel environment variables.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -131,8 +118,15 @@ const getSchemaAnalysis = async (input: string): Promise<SchemaAnalysisResult> =
       correctedJsonLd: correctedJsonLd
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Analysis Error:", error);
+    
+    // Provide more specific error messages to help user debug API key issues
+    const msg = error.message || error.toString();
+    if (msg.includes('403') || msg.includes('API key')) {
+        throw new Error("Toegang geweigerd (403): Controleer of je API Key correct is ingesteld in Google Cloud Console en of de domein-restricties (Referer) overeenkomen met deze website URL.");
+    }
+    
     throw new Error("Het analyseren van de schema is mislukt. Probeer het opnieuw.");
   }
 };
