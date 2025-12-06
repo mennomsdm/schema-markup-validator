@@ -1,0 +1,5 @@
+{
+  "name": "SchemaForge Validator Deploy",
+  "description": "An advanced AI-powered Schema Markup Validator. Detects, validates, and corrects JSON-LD, Microdata, and RDFa for SEO perfection.",
+  "requestFramePermissions": []
+}
