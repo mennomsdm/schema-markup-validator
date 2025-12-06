@@ -2,9 +2,26 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { SchemaAnalysisResult } from "../types";
 
 const getSchemaAnalysis = async (input: string): Promise<SchemaAnalysisResult> => {
-  const apiKey = process.env.API_KEY;
+  // Try to retrieve the API Key from various sources depending on the build environment
+  // 1. Vite (import.meta.env.VITE_API_KEY)
+  // 2. Standard Node/Webpack (process.env.API_KEY)
+  // 3. Fallback for manual window injection
+  
+  let apiKey = '';
+  
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+    // @ts-ignore
+    apiKey = import.meta.env.VITE_API_KEY;
+  } else if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+    apiKey = process.env.API_KEY;
+  } else if (typeof window !== 'undefined' && (window as any).process?.env?.API_KEY) {
+    apiKey = (window as any).process.env.API_KEY;
+  }
+
   if (!apiKey) {
-    throw new Error("API Key not found");
+    console.error("API Key missing. Please set VITE_API_KEY in your environment variables.");
+    throw new Error("API Configuratie ontbreekt. Neem contact op met de beheerder.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
