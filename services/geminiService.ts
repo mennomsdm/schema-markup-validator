@@ -2,13 +2,15 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { SchemaAnalysisResult } from "../types";
 
 const getSchemaAnalysis = async (input: string): Promise<SchemaAnalysisResult> => {
-  // Vite replaces this with the actual string during build
+  // Vite exposes env vars on import.meta.env.
+  // They MUST start with VITE_ to be visible in the browser.
+  // We check for your specific name first, then the generic one.
   // @ts-ignore
-  const apiKey = import.meta.env.VITE_API_KEY;
+  const apiKey = import.meta.env.VITE_API_KEY_SCHEMA || import.meta.env.VITE_API_KEY;
 
   if (!apiKey) {
-    console.error("API Key missing. VITE_API_KEY not found.");
-    throw new Error("API Configuratiefout: Sleutel ontbreekt. Controleer je Vercel environment variables.");
+    console.error("API Key missing. VITE_API_KEY_SCHEMA not found.");
+    throw new Error("Configuratiefout: API Key ontbreekt. Voeg 'VITE_API_KEY_SCHEMA' toe aan je Vercel Environment Variables.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -124,7 +126,7 @@ const getSchemaAnalysis = async (input: string): Promise<SchemaAnalysisResult> =
     // Provide more specific error messages to help user debug API key issues
     const msg = error.message || error.toString();
     if (msg.includes('403') || msg.includes('API key')) {
-        throw new Error("Toegang geweigerd (403): Controleer of je API Key correct is ingesteld in Google Cloud Console en of de domein-restricties (Referer) overeenkomen met deze website URL.");
+        throw new Error("Toegang geweigerd (403): Controleer in Vercel Settings of je Environment Variable 'VITE_API_KEY_SCHEMA' heet en de juiste waarde heeft. Controleer ook je Google Cloud Console domein restricties.");
     }
     
     throw new Error("Het analyseren van de schema is mislukt. Probeer het opnieuw.");
